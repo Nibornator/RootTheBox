@@ -46,6 +46,7 @@ from models.Flag import (
     FLAG_CHOICE,
     FLAG_DATETIME,
     FLAG_FILE,
+    FLAG_FILE_SUBMISSION,#Added
     FLAG_REGEX,
     FLAG_STATIC,
     Flag,
@@ -60,6 +61,7 @@ from models.Penalty import Penalty
 from models.Team import Team
 from models.User import ADMIN_PERMISSION
 
+import datetime
 
 class AdminCreateHandler(BaseHandler):
 
@@ -77,6 +79,7 @@ class AdminCreateHandler(BaseHandler):
             "flag": "admin/create/flag.html",
             "flag/regex": "admin/create/flag-regex.html",
             "flag/file": "admin/create/flag-file.html",
+            "flag/file_submission": "admin/create/flag-file_submission.html",#Added
             "flag/static": "admin/create/flag-static.html",
             "flag/datetime": "admin/create/flag-datetime.html",
             "flag/choice": "admin/create/flag-choice.html",
@@ -103,6 +106,7 @@ class AdminCreateHandler(BaseHandler):
             "corporation": self.create_corporation,
             "box": self.create_box,
             "flag/file": self.create_flag_file,
+            "flag/file_submission": self.create_flag_file_submission,#Added
             "flag/regex": self.create_flag_regex,
             "flag/static": self.create_flag_static,
             "flag/datetime": self.create_flag_datetime,
@@ -253,6 +257,13 @@ class AdminCreateHandler(BaseHandler):
             self._mkflag(FLAG_FILE, is_file=True)
         except ValidationError as error:
             self.render("admin/create/flag-file.html", errors=[str(error)], box=None)
+    #Added
+    def create_flag_file_submission(self):
+        """Create a flag flag submission"""
+        try:
+            self._mkflag(FLAG_FILE_SUBMISSION, is_file=False)
+        except ValidationError as error:
+            self.render("admin/create/flag-file_submission.html", errors=[str(error)], box=None)
 
     def create_flag_choice(self):
         """Create a multiple choice flag"""
@@ -350,7 +361,11 @@ class AdminCreateHandler(BaseHandler):
         name = self.get_argument("flag_name", "")
         description = self.get_argument("description", "")
         reward = self.get_argument("reward", "")
-        flag = Flag.create_flag(flag_type, box, name, token, description, reward)
+        #Added
+        if flag_type == FLAG_FILE_SUBMISSION:
+            flag = Flag.create_submsission_flag(flag_type, box, name, description, reward)
+        else:
+            flag = Flag.create_flag(flag_type, box, name, token, description, reward)
         flag.capture_message = self.get_argument("capture_message", "")
         flag.case_sensitive = self.get_argument("case-sensitive", 1)
         for fl in box.flags:
@@ -1332,3 +1347,36 @@ class AdminTestTokenHandler(BaseHandler):
         else:
             self.write({"Error": "Invalid submission."})
         self.finish()
+
+#Added
+import logging
+class SetCorpTimesHandler(BaseHandler):
+    @authenticated
+    @authorized(ADMIN_PERMISSION)
+    def get(self):
+        logging.basicConfig(filename='app.log', level=logging.DEBUG)
+        logging.debug('This is a debug message get time')
+        
+        corporations = Corporation.all()
+        for corporation in corporations:
+            print(f"Corporation: {corporation.name}, Start Time: {corporation.start_time}, End Time: {corporation.end_time}")
+        self.render("admin/view/game_objects.html", corporations=corporations, success=None, errors=None)
+
+    @authenticated
+    @authorized(ADMIN_PERMISSION)
+    def post(self):
+        uuid = self.get_argument("uuid")
+        start_time = self.get_argument("start_time", None)
+        end_time = self.get_argument("end_time", None)
+
+        corporation = Corporation.by_uuid(uuid)
+        if corporation:
+            if start_time:
+                corporation.start_time = datetime.datetime.fromisoformat(start_time)
+            if end_time:
+                corporation.end_time = datetime.datetime.fromisoformat(end_time)
+            self.dbsession.add(corporation)
+            self.dbsession.commit()
+            self.redirect("/admin/view/game_objects")
+        else:
+            self.write("Corporation not found")

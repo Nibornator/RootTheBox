@@ -1,0 +1,64 @@
+{% extends "../main.html" %}
+
+{% block title %}Admin - Give Flag{% end %}
+
+{% block header %}
+<link rel="stylesheet" href="/static/css/pages/admin/give_flag.css" />
+<script src="/static/js/pages/admin/give_flag.js"></script>
+{% end %}
+
+{% block content %}
+<div class="container">
+    <h1>Gib einem Team eine Flage</h1>
+    <form method="post" action="/admin/give_flag">
+        {% raw xsrf_form_html() %}
+        <div class="control-group">
+            <label class="control-label" for="team_id">Team</label>
+            <div class="controls">
+                <select id="team_id" name="team_id">
+                    {% for team in teams %}
+                    <option value="{{ team.id }}">{{ team.name }}</option>
+                    {% end %}
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="corporation_id">Corporation</label>
+            <div class="controls">
+                <select id="corporation_id" name="corporation_id" onchange="filterFlags()">
+                    <option value="">All Corporations</option>
+                    {% for corporation in corporations %}
+                    <option value="{{ corporation.id }}">{{ corporation.name }}</option>
+                    {% end %}
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="box_id">Box</label>
+            <div class="controls">
+                <select id="box_id" name="box_id" onchange="filterFlags()">
+                    <option value="">All Boxes</option>
+                    {% for box in boxes %}
+                    <option value="{{ box.id }}" data-corporation="{{ box.corporation_id }}">{{ box.name }}</option>
+                    {% end %}
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="flag_id">Flag</label>
+            <div class="controls">
+                <select id="flag_id" name="flag_id">
+                    {% for flag in flags %}
+                    <option value="{{ flag.id }}" data-corporation="{{ flag.box.corporation_id }}" data-box="{{ flag.box_id }}">{{ flag.name }}</option>
+                    {% end %}
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="controls">
+                <button type="submit" class="btn btn-primary">Give Flag</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% end %}

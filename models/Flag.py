@@ -31,7 +31,7 @@ from dateutil.parser import parse
 from past.utils import old_div
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.orm import backref, relationship
-from sqlalchemy.types import Boolean, Integer, String, Unicode
+from sqlalchemy.types import Boolean, Integer, String, Unicode , FLOAT
 from tornado.options import options
 
 from libs.ValidationError import ValidationError
@@ -48,9 +48,10 @@ from models.Team import Team
 FLAG_STATIC = "static"
 FLAG_REGEX = "regex"
 FLAG_FILE = "file"
+FLAG_FILE_SUBMISSION = "file_submission" #Added for file submission flags
 FLAG_DATETIME = "datetime"
 FLAG_CHOICE = "choice"
-FLAG_TYPES = [FLAG_STATIC, FLAG_REGEX, FLAG_FILE, FLAG_DATETIME, FLAG_CHOICE]
+FLAG_TYPES = [FLAG_STATIC, FLAG_REGEX, FLAG_FILE,FLAG_FILE_SUBMISSION, FLAG_DATETIME, FLAG_CHOICE]
 
 
 class Flag(DatabaseObject):
@@ -72,13 +73,13 @@ class Flag(DatabaseObject):
     lock_id = Column(Integer, ForeignKey("flag.id", ondelete="SET NULL"), nullable=True)
 
     _name = Column(Unicode(64), nullable=True)
-    _token = Column(Unicode(256), nullable=False)
+    _token = Column(Unicode(256), nullable=True)#Changed to true for file submission flags
     _plain_answer = Column(Unicode(256)) # https://github.com/moloch--/RootTheBox/issues/601
     _description = Column(Unicode(4096), nullable=False)
     _capture_message = Column(Unicode(4096))
     _case_sensitive = Column(Integer, nullable=True)
-    _value = Column(Integer, nullable=False)
-    _original_value = Column(Integer, nullable=True)
+    _value = Column(FLOAT, nullable=False)
+    _original_value = Column(FLOAT, nullable=True)
     _order = Column(Integer, nullable=True, index=True)
     _type = Column(Unicode(16), default=False)
     _locked = Column(Boolean, default=False, nullable=False)
@@ -107,7 +108,7 @@ class Flag(DatabaseObject):
         cascade="all,delete,delete-orphan",
     )
 
-    FLAG_TYPES = [FLAG_FILE, FLAG_REGEX, FLAG_STATIC, FLAG_DATETIME, FLAG_CHOICE]
+    FLAG_TYPES = [FLAG_FILE,FLAG_FILE_SUBMISSION, FLAG_REGEX, FLAG_STATIC, FLAG_DATETIME, FLAG_CHOICE]
 
     @classmethod
     def all(cls):
@@ -163,6 +164,7 @@ class Flag(DatabaseObject):
             FLAG_STATIC: cls._create_flag_static,
             FLAG_REGEX: cls._create_flag_regex,
             FLAG_FILE: cls._create_flag_file,
+            FLAG_FILE_SUBMISSION: cls._create_flag_file_submission,#Added for file submission flags
             FLAG_DATETIME: cls._create_flag_datetime,
             FLAG_CHOICE: cls._create_flag_choice,
         }
@@ -174,7 +176,14 @@ class Flag(DatabaseObject):
         new_flag = creators[_type](box, name, raw_token, description, value)
         new_flag._type = _type
         return new_flag
-
+    #Added for file submission flags not pretty but whatever
+    @classmethod
+    def create_submsission_flag(cls, _type, box, name, description, value):
+        assert box is not None and isinstance(box, Box)
+        new_flag = cls._create_flag_file_submission(box, name, description, value)
+        new_flag._type = _type
+        return new_flag
+    
     @classmethod
     def _create_flag_file(cls, box, name, raw_token, description, value):
         """Check flag file specific parameters"""
@@ -182,7 +191,13 @@ class Flag(DatabaseObject):
         return cls(
             box_id=box.id, name=name, token=token, description=description, value=value
         )
-
+    #Added for file submission flags
+    @classmethod
+    def _create_flag_file_submission(cls, box, name, description, value):
+        """Check flag file specific parameters"""
+        return cls(
+            box_id=box.id, name=name,token="hack", description=description, value=value
+        )
     @classmethod
     def _create_flag_regex(cls, box, name, raw_token, description, value):
         """Check flag regex specific parameters"""
@@ -352,9 +367,9 @@ class Flag(DatabaseObject):
     @value.setter
     def value(self, value):
         try:
-            self._value = abs(int(value))
+            self._value = float(value)
         except ValueError:
-            raise ValidationError("Reward value must be an integer")
+            raise ValidationError("Reward value must be an float")
 
     @property
     def get_lock_id(self):
@@ -381,6 +396,10 @@ class Flag(DatabaseObject):
     @property
     def is_file(self):
         return self._type == FLAG_FILE
+
+    @property
+    def is_submission(self):
+        return self._type == FLAG_FILE_SUBMISSION
 
     @property
     def box(self):

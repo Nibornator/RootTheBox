@@ -42,6 +42,8 @@ from models.Hint import Hint
 from models.Penalty import Penalty
 from models.Team import Team
 
+import logging
+
 
 class FirstLoginHandler(BaseHandler):
     @authenticated
@@ -177,6 +179,7 @@ class BoxHandler(BaseHandler):
                     info=["Max attempts reached - you can no longer answer this flag."],
                 )
                 return
+        logging.info(f"flag made {flag.name} by user {user.handle}.")
         if flag and flag in user.team.flags:
             self.render_page_by_flag(flag)
             return
@@ -186,6 +189,8 @@ class BoxHandler(BaseHandler):
             or flag.game_level in user.team.game_levels
         ):
             submission = ""
+            if flag.is_submission:
+                logging.info(f"submission made {flag.name} by user {user.handle}.")
             if flag is not None and flag.is_file:
                 if hasattr(self.request, "files") and "flag" in self.request.files:
                     submission = self.request.files["flag"][0]["body"]
@@ -464,7 +469,7 @@ class FlagCaptureMessageHandler(BaseHandler):
         fuuid = self.get_argument("flag", None)
         buuid = self.get_argument("box", None)
         try:
-            reward = int(self.get_argument("reward", 0))
+            reward = float(self.get_argument("reward", 0))
         except ValueError:
             reward = 0
         user = self.get_current_user()
@@ -594,3 +599,25 @@ class MissionsHandler(BaseHandler):
                 errors=["Level does not exist"],
                 success=None,
             )
+#Added
+import models.Corporation as Corporation
+class SubmitFilesHandler(BaseHandler):
+    @authenticated
+    def get(self, uuid):
+        corporation = Corporation.by_uuid(uuid)
+        if not corporation:
+            self.render("public/404.html")
+            return
+        files = corporation.get_submitted_files()
+        self.render("missions/submit_files.html", corporation=corporation, files=files)
+
+    @authenticated
+    def post(self, uuid):
+        corporation = Corporation.by_uuid(uuid)
+        if not corporation:
+            self.render("public/404.html")
+            return
+        files = self.request.files.get("files", [])
+        for file in files:
+            corporation.save_submitted_file(file)
+        self.redirect(f"/user/missions/submit_files{uuid}")

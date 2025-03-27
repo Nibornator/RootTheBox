@@ -1,0 +1,33 @@
+{% extends "../main.html" %}
+
+{% block title %}{{ corporation.name }} - Submit Files{% end %}
+
+{% block header %}
+<link rel="stylesheet" href="/static/css/pages/missions/submit_files.css" />
+<script src="/static/js/pages/missions/submit_files.js"></script>
+{% end %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ corporation.name }} - {{ _("Submit Files for Review") }}</h1>
+    <ul>
+        {% for file in files %}
+        <li>{{ file.file_name }} - {{ file.uploaded_at }}</li>
+        {% end %}
+    </ul>
+    <form id="submit-files-form" class="form-horizontal" method="post" action="/user/missions/submit_files{{ corporation.uuid }}" enctype="multipart/form-data">
+        {% raw xsrf_form_html() %}
+        <div class="control-group">
+            <label class="control-label" for="files">{{ _("Files") }}</label>
+            <div class="controls">
+                <input id="files" name="files" type="file" multiple />
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="controls">
+                <button type="submit" class="btn btn-primary">{{ _("Submit") }}</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% end %}

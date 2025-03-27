@@ -311,7 +311,7 @@
                 <div class="control-group">
                     <label class="control-label" for="flag-name">{{_("Flag Name")}}</label>
                     <div class="controls">
-                        <input id="flag-name" maxlength="64" name="name" type="text" placeholder="({{_('Optional')}}" />
+                        <input id="flag-name" maxlength="16" name="name" type="text" placeholder="({{_('Optional')}}" />
                     </div>
                 </div>
                 <div class="control-group">
@@ -777,6 +777,32 @@
                         </a>
                         <br />{% if corporation.description %}<br>&nbsp;&nbsp;{{ corporation.description }}<br />{% end %}
                         <br />
+                        <!-- NEW form for setting start and end times -->
+                        <div class="well">
+                            <h3>{{_("Set Availability Times")}}</h3>
+                            <form id="set-availability-form-{{ corporation.uuid }}" class="form-horizontal" method="post" action="/admin/set_availability">
+                                {% raw xsrf_form_html() %}
+                                <input type="hidden" name="uuid" value="{{ corporation.uuid }}" />
+                                <div class="control-group">
+                                    <label class="control-label" for="start-time">{{ _("Start Time") }}</label>
+                                    <div class="controls">
+                                        <input type="datetime-local" id="start-time" name="start_time" value="{{ corporation.start_time}}" />
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="end-time">{{ _("End Time") }}</label>
+                                    <div class="controls">
+                                        <input type="datetime-local" id="end-time" name="end_time" value="{{ corporation.end_time }}" />
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- End of form for setting start and end times -->
                         {% if len(corporation.boxes) != 0 %}
                             {% for box in sorted(corporation.boxes) %}
                                 <div id="{{ box.uuid }}" class="well{% if box.locked %} locked{% end %}">

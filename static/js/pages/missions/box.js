@@ -22,6 +22,19 @@ $(document).ready(function() {
         $("#capture-file-flag-form").submit();
     });
 
+    // Added New file submission flag 
+    $("#capture-file-submission-flag-modal").on('shown.bs.modal', function () {
+        $("#flag-file-submission").focus()
+    });
+
+    $("a[id^=capture-file-submission-flag-button]").click(function() {
+        $("#capture-file-submission-flag-uuid").val($(this).data("uuid"));
+    });
+
+    $("#capture-file-submission-flag-submit").click(function() {
+        $("#capture-file-submission-flag-form").submit();
+    });
+    
     $("#capture-text-flag-modal").on('shown.bs.modal', function () {
         $("#flag-token").focus()
     });

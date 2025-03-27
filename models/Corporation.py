@@ -32,6 +32,10 @@ from libs.ValidationError import ValidationError
 from models import dbsession
 from models.BaseModels import DatabaseObject
 
+from sqlalchemy import Column, String, DateTime
+#Added
+from models.FileUpload import FileUpload
+import datetime
 
 class Corporation(DatabaseObject):
     """Corporation definition"""
@@ -41,6 +45,11 @@ class Corporation(DatabaseObject):
     _name = Column(Unicode(32), unique=True, nullable=False)
     _description = Column(Unicode(512))
     _locked = Column(Boolean, default=False, nullable=False)
+    #Added
+    _start_time = Column(DateTime)
+    _end_time = Column(DateTime)
+
+    
 
     boxes = relationship(
         "Box",
@@ -112,6 +121,25 @@ class Corporation(DatabaseObject):
             value = value.lower() in ["true", "1"]
         assert isinstance(value, bool)
         self._locked = value
+    #Added start_time and end_time
+    @property
+    def start_time(self):
+        #Debug output auf die Konsole
+        print("Start Time: ", self._start_time)
+        if self._start_time is None:
+            return None #Defualt value
+        return self._start_time
+    @start_time.setter
+    def start_time(self, value):
+        self._start_time = value
+    @property
+    def end_time(self):
+        if self._end_time is None:
+            return None #Defualt value
+        return self._end_time
+    @end_time.setter
+    def end_time(self, value):
+        self._end_time = value
 
     def to_dict(self):
         """Returns editable data as a dictionary"""
@@ -138,3 +166,32 @@ class Corporation(DatabaseObject):
 
     def __str__(self):
         return self.name
+    #Added 
+    def update_lock_status(self, current_time):
+        """Update the lock status of the corporation"""
+        if self.start_time is not None and self.end_time is not None:
+            if self.start_time <= current_time and current_time <= self.end_time:
+                self.locked = False
+            else:
+                self.locked = True
+
+    submitted_files = relationship(
+        "FileUpload",
+        backref="corporation",
+        cascade="all, delete, delete-orphan"
+    )
+
+    def get_submitted_files(self):
+        return self.submitted_files
+    
+    def save_submitted_file(self, file):
+        file_upload = FileUpload(
+            file_name=file['filename'],
+            data=file['body'],
+            description="Submitted file for corporation",
+            team_id=self.id,  # Assuming team_id is used to link to the corporation
+            corporation_id=self.id,
+            uploaded_at=datetime.datetime.utcnow()
+        )
+        dbsession.add(file_upload)
+        dbsession.commit()

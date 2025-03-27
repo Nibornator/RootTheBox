@@ -152,7 +152,12 @@
                         <h4 class="game_button_text">{{ _("Clear Countdown") }}</h4>
                     {% end %}
                 </div>
-
+                <div class="game_button_area">
+                    <button id="give-flag-button" class="btn btn-primary game_button" type="button" onclick="window.location.href='/admin/give_flag'">
+                        <i class="fa fa-fw fa-flag"></i>
+                    </button>
+                    <h4 class="game_button_text">{{ _("Give Flag to Team") }}</h4>
+                </div>
             </div>
         </div>
         <div class="row">

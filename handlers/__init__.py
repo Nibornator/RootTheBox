@@ -202,7 +202,10 @@ urls = [
     (r"/admin", NoobHandler),
     (r"/(.*)phpmyadmin(.*)", NoobHandler),
     (r"/administrator(.*)", NoobHandler),
-]
+    #Added
+    (r"/admin/set_availability", SetCorpTimesHandler),
+    (r"/user/missions/submit_files(.*)", SubmitFilesHandler),
+    (r"/admin/give_flag", AdminGiveFlagHandler),]
 
 # These routes should be disabled if we're not using the database for authentication.
 # If database auth is used add them in.

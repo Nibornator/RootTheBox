@@ -38,7 +38,6 @@ from libs.ConsoleColors import *
 from libs.StringCoding import set_type
 from setup import __version__
 
-
 def current_time():
     """Nicely formatted current time as a string"""
     return str(datetime.now()).split(" ")[1].split(".")[0]
@@ -77,6 +76,9 @@ def start():
     if result == "restart":
         restart()
 
+    #Added
+    periodic_callback = PeriodicCallback(check_and_update_corporation_lock_status, 60000)
+    periodic_callback.start()
 
 def setup():
     """
@@ -1245,3 +1247,14 @@ if __name__ == "__main__":
         AdminResetDeleteHandler.reset(dbsession)
     else:
         print(help())
+    #Added
+    from tornado.ioloop import IOLoop, PeriodicCallback
+    from models.Corporation import Corporation
+#Added
+
+def check_and_update_corporation_lock_status():
+    """Check and update the lock status of corporations based on the current time."""
+    current_time = datetime.datetime.now()
+    corporations = Corporation.all()
+    for corporation in corporations:
+        corporation.update_lock_status(current_time)

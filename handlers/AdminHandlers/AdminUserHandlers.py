@@ -461,3 +461,35 @@ class AdminAjaxUserHandler(BaseHandler):
             self.write(user.to_dict())
         else:
             self.write({})
+
+class AdminGiveFlagHandler(BaseHandler):
+    @authenticated
+    @authorized(ADMIN_PERMISSION)
+    def get(self):
+        teams = Team.all()
+        flags = Flag.all()
+        corporations = Corporation.all()
+        boxes = Box.all()
+        self.render("admin/give_flag.html", teams=teams, flags=flags, corporations=corporations, boxes=boxes)
+
+    @authenticated
+    @authorized(ADMIN_PERMISSION)
+    def post(self):
+        team_id = self.get_argument("team_id")
+        flag_id = self.get_argument("flag_id")
+        team = Team.by_id(team_id)
+        flag = Flag.by_id(flag_id)
+
+        if team and flag:
+            team.add_flag(flag)
+            for user in team.members:
+                user.flags.append(flag)
+                self.dbsession.add(user)
+                user.flags.append(flag)
+                self.dbsession.add(user)
+            self.dbsession.add(team)
+            self.dbsession.commit()
+            self.event_manager.flag_captured(user, flag)
+            self.redirect("/admin/give_flag")
+        else:
+            self.render("public/404.html")

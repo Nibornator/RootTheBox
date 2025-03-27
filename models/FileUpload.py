@@ -34,7 +34,10 @@ from libs.StringCoding import decode, encode
 from libs.ValidationError import ValidationError
 from models import dbsession
 from models.BaseModels import DatabaseObject
-
+#Added
+from sqlalchemy.orm import relationship
+from datetime import datetime
+from sqlalchemy import DateTime
 MAX_FILE_SIZE = 50 * (1024**2)  # Max file size 50Mb
 
 
@@ -51,6 +54,11 @@ class FileUpload(DatabaseObject):
     byte_size = Column(Integer, nullable=False)
     _description = Column(Unicode(1024), nullable=False)
     _file_name = Column(Unicode(64), nullable=False)
+
+    #Added
+    corporation_id = Column(Integer, ForeignKey("corporation.id"), nullable=True)
+    uploaded_at = Column(DateTime, default=datetime.utcnow)
+    #corporation = relationship("Corporation", back_populates="submitted_files")
 
     @classmethod
     def all(cls):

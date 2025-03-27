@@ -36,7 +36,7 @@
                     <div class="control-group">
                         <label class="control-label" for="flag_name">{{_("Flag Name")}}</label>
                         <div class="controls">
-                            <input autofocus id="flag-name" maxlength="64" name="flag_name" type="text" placeholder="({{_('Optional')}})"
+                            <input autofocus id="flag-name" maxlength="16" name="flag_name" type="text" placeholder="({{_('Optional')}})"
                                     rel="popover"
                                     data-original-title="{{_('Flag Name')}}"
                                     data-content="{{_('This is what you want the flag to be displayed as.  Leave blank to be named automatically by order #.')}}" />
@@ -61,10 +61,10 @@
                      <div class="control-group">
                         <label class="control-label" for="reward">{% if options.banking %}{{_("Reward")}}{% else %}{{_("Points")}}{% end %}</label>
                         <div class="controls">
-                            <input required id="reward" name="reward" type="number" pattern="[0-9]+" placeholder="{% if options.banking %}{{_('$')}} {{_('Reward')}}{% else %}{{_('Points')}}{% end %}"
+                            <input required id="reward" name="reward" type="number" step="0.1" placeholder="{% if options.banking %}{{_('$')}} {{_('Reward')}}{% else %}{{_('Points')}}{% end %}"
                                    rel="popover"
                                    data-original-title="{% if options.banking %}{{_('Reward')}}{% else %}{{_('Points')}}{% end %}"
-                                   data-content="{{_('This is the amount awarded for capturing the flag.')}}">
+                                   data-content="{{_('This is the amount awarded for capturing the flag. Supports fractional points, e.g., 0.5')}}">
                         </div>
                     </div>
                     <div class="control-group">
